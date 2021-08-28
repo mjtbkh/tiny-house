@@ -1,12 +1,20 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import ApolloClient from 'apollo-boost'
+import { ApolloProvider } from 'react-apollo'
 import reportWebVitals from './reportWebVitals'
 import Listings from './sections/Listings/Listings'
 
+const client = new ApolloClient({
+  uri: '/api'
+})
+
 ReactDOM.render(
-  <React.StrictMode>
-    <Listings />
-  </React.StrictMode>,
+  <ApolloProvider client={client}>
+    <React.StrictMode>
+      <Listings />
+    </React.StrictMode>
+  </ApolloProvider>,
   document.getElementById('root')
 )
 

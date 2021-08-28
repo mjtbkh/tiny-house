@@ -1,9 +1,13 @@
 import React, { useState } from 'react'
-import useQuery from '../../lib/api/useQuery'
-import useMutation from '../../lib/api/useMutation'
-import { ListingData, DeleteListingData, DeleteListingVariables } from './types'
+import { gql } from 'apollo-boost'
+import { useQuery, useMutation } from 'react-apollo'
+import { Listings as ListingData } from './__generated__/Listings'
+import {
+  DeleteListing as DeleteListingData,
+  DeleteListingVariables
+} from './__generated__/DeleteListing'
 
-const LISTINGS = `
+const LISTINGS = gql`
   query Listings {
     listings {
       id
@@ -18,7 +22,7 @@ const LISTINGS = `
     }
   }
 `
-const DELETE_LISTING = `
+const DELETE_LISTING = gql`
   mutation DeleteListing($id: ID!) {
     deleteListing(id: $id) {
       id
@@ -35,18 +39,18 @@ const DELETE_LISTING = `
 `
 
 const Listings: React.FC = () => {
-  const [id, setId] = useState<string>('')
   const title = 'TinyHouse Listings'
 
   // eslint-disable-next-line
   const { data, loading, error, refetch } = useQuery<ListingData>(LISTINGS)
+
   const [
     deleteListing,
     { loading: deleteListingLoading, error: deleteListingError }
   ] = useMutation<DeleteListingData, DeleteListingVariables>(DELETE_LISTING)
-  const handleDeleteListing = async () => {
-    await deleteListing({ id })
-    refetch()
+
+  const handleDeleteListing = async (id: string) => {
+    await deleteListing({ variables: { id } }).then(() => refetch())
   }
   const listings = data ? data.listings : null
   // eslint-disable-next-line
@@ -54,18 +58,18 @@ const Listings: React.FC = () => {
     // eslint-disable-next-line
     listings ? (
       <ul>
-        {listings && // eslint-disable-line
-          listings.map((listing: any) => (
-            <ol key={listing.id}>
-              {
-                // eslint-disable-next-line
-                `${listing.title} - ${listing.address}`
-              }
-              <button type="button" onClick={handleDeleteListing}>
-                Delete!
-              </button>
-            </ol>
-          ))}
+        {' '}
+        {listings.map((listing: any) => (
+          <ol key={listing.id} id={listing.id}>
+            {`${listing.title} - ${listing.address}`}
+            <button
+              type="button"
+              onClick={() => handleDeleteListing(listing.id.toString())}
+            >
+              Delete!
+            </button>
+          </ol>
+        ))}
       </ul>
     ) : (
       <>
@@ -87,10 +91,6 @@ const Listings: React.FC = () => {
     <>
       <h2>{title}</h2>
       <hr />
-      <input type="text" value={id} onChange={(e) => setId(e.target.value)} />
-      <button type="button" onClick={handleDeleteListing}>
-        Delete a listing
-      </button>
       <List />
       {deleteListingLoading}
       {deleteListingErrorMessage}
